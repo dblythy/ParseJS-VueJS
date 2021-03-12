@@ -1,8 +1,8 @@
 <template>
   <div id="app">
     <div>
-    <input type="text" placeholder="Monster Name" v-model="monster.name"/>
-    <button @click="save(monster)">Save</button>
+      <input type="text" placeholder="Monster Name" v-model="monster.name"/>
+      <button @click="save(monster)">Save</button>
     </div>
     <button @click="loadObjects">Load Objects</button>
     <div v-for="object,index in objects" :key="index">
