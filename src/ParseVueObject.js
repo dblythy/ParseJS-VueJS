@@ -6,7 +6,7 @@ class ParseVueObject extends Parse.Object {
     this.loadData(this);
   }
   loadData(object) {
-    if (!object.toJSON) {
+    if (!object || !object.toJSON) {
       return;
     }
     const data = object.toJSON();
@@ -19,34 +19,21 @@ class ParseVueObject extends Parse.Object {
       this.loadData(value);
     }
   }
+  set(key, value) {
+    super.set(key, value);
+    this[key] = value;
+  }
   async save() {
-    const saveNested = object => {
-      for (const key in object) {
-        if (internal.includes(key)) {
-          continue;
-        }
-        let value = this[key];
-        if (Array.isArray(value)) {
-          const newArray = [];
-          for (let i = 0; i < value.length; i++) {
-            let nestedValue = value[i];
-            if (nestedValue && nestedValue.__type) {
-              nestedValue = Parse._decode(null, nestedValue);
-            }
-            newArray.push(nestedValue);
-          }
-          value = newArray;
-        }
-        if (value && value.__type) {
-          const obj = Parse._decode(null, this[key]);
-          saveNested(obj);
-        } else if (JSON.stringify(object.get(key)) !== JSON.stringify(value)) {
-          object.set(key, value);
-        }
+    const internal = ["id", "className", "createdAt", "updatedAt", "ACL"];
+    for (const key in this) {
+      if (internal.includes(key)) {
+        continue;
       }
-    };
-    saveNested(this);
-    // await super.save(); uncomment on live server
+      if (JSON.stringify(this[key]) !== JSON.stringify(this.get(key))) {
+        this.set(key, this[key]);
+      }
+    }
+    // await super.save(); // uncomment on live server
   }
   _finishFetch(serverData) {
     super._finishFetch(serverData);
