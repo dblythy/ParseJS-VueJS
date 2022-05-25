@@ -5,10 +5,10 @@
       <button @click="save(monster)">Save</button>
     </div>
     <button @click="loadObjects">Load Objects</button>
-    <div v-for="object,index in objects" :key="index">
+    <div v-for="(object,index) in objects" :key="index">
       <input type="text" placeholder="text" v-model="object.text"/>
       <button @click="save(object)">Save</button>
-      object.index: {{object.index}}
+      object.index: {{index}}
       object.text: {{object.text}}
     </div>
   </div>

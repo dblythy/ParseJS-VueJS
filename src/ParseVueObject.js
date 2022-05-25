@@ -1,43 +1,42 @@
 import { Parse } from 'parse';
-const internal = ["objectId", "id", "className", "createdAt", "updatedAt", "_localId", "_objCount"];
+const _internalFields = Object.freeze([
+  'objectId',
+  'id',
+  'className',
+  'attributes',
+  'createdAt',
+  'updatedAt',
+  'then',
+]);
+const proxyHandler = {
+  get(target, key, receiver) {
+    const value = target[key];
+    if (
+      typeof value === 'function' ||
+      key.toString().charAt(0) === '_' ||
+      _internalFields.includes(key.toString())
+    ) {
+      return Reflect.get(target, key, receiver);
+    }
+    return receiver.get(key) || Reflect.get(target, key, receiver);
+  },
+
+  set(target, key, value, receiver) {
+    const current = target[key];
+    if (
+      typeof current !== 'function' &&
+      !_internalFields.includes(key.toString()) &&
+      key.toString().charAt(0) !== '_'
+    ) {
+      receiver.set(key, value);
+    }
+    return Reflect.set(target, key, value, receiver);
+  },
+};
 class ParseVueObject extends Parse.Object {
   constructor(className) {
     super(className);
-    this.loadData(this);
-  }
-  loadData(object) {
-    if (!object || !object.toJSON) {
-      return;
-    }
-    const data = object.toJSON();
-    for (const key in data) {
-      if (internal.includes(key)) {
-        continue;
-      }
-      const value = data[key];
-      object[key] = value;
-      this.loadData(value);
-    }
-  }
-  set(key, value) {
-    super.set(key, value);
-    this[key] = value;
-  }
-  async save() {
-    const internal = ["id", "className", "createdAt", "updatedAt", "ACL"];
-    for (const key in this) {
-      if (internal.includes(key)) {
-        continue;
-      }
-      if (JSON.stringify(this[key]) !== JSON.stringify(this.get(key))) {
-        this.set(key, this[key]);
-      }
-    }
-    // await super.save(); // uncomment on live server
-  }
-  _finishFetch(serverData) {
-    super._finishFetch(serverData);
-    this.loadData(this);
+    return new Proxy(this, proxyHandler);
   }
 }
 export { ParseVueObject }
