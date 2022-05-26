@@ -34,8 +34,8 @@ const proxyHandler = {
   },
 };
 class ParseVueObject extends Parse.Object {
-  constructor(className) {
-    super(className);
+  constructor(className, json) {
+    super(className, json);
     return new Proxy(this, proxyHandler);
   }
 }
